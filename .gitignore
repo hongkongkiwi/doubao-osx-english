@@ -2,7 +2,6 @@ dist/
 doubao-en-strings.txt
 extracted-strings.txt
 mt-work/
-lib/dictionary-mt.json
 *.log
 .DS_Store
 node_modules/
