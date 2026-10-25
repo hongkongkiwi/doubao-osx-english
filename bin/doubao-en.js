@@ -44,7 +44,32 @@ let userDict = {};
 try { userDict = JSON.parse(fs.readFileSync(USER_DICT_PATH, "utf8")); } catch {}
 const dict = { ...require(path.join(__dirname, "..", "lib", "dictionary.js")), ...userDict };
 const dictSrc = `window.DOUBAO_EN_DICT = ${JSON.stringify(dict)};`;
-const INJECT_SRC = `${dictSrc}\n;\n${transSrc}`;
+
+// Placeholder templates ("%s 分钟前", "{fileName} 上传失败") never match exact
+// lookup after the app interpolates them, so each becomes a regex rule:
+// zh template -> anchored pattern with capture groups, en -> replacement
+// whose {token} refs map back to the groups.
+const RULES = [];
+for (const [zh, en] of Object.entries(dict)) {
+  if (!en || !/(\{[^{}]+\}|%\d+\$?s|%s|%d)/.test(zh)) continue;
+  const tokens = [];
+  const zhRx = zh
+    .replace(/\{[^{}]+\}|%\d+\$?[sd]|%s|%d/g, (m) => { tokens.push(m); return "\u0000" + (tokens.length - 1) + "\u0000"; })
+    .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  // string placeholders capture a short run without separators; %d captures digits
+  const rx = "^" + zhRx.replace(/\u0000(\d+)\u0000/g, (_, i) => (/%d$/.test(tokens[i]) ? "(\\d{1,6})" : "([^|]{0,40}?)")) + "$";
+  // EN: {token} -> its group; bare %s/%d map to groups in order of appearance
+  let n = 0;
+  let rep = en.replace(/\{([^{}]+)\}/g, (m, tok) => {
+    const idx = tokens.indexOf("{" + tok + "}");
+    return idx === -1 ? "" : "$" + (idx + 1);
+  });
+  rep = rep.replace(/%(\d+)\$?[sd]/g, (m, num) => "$" + num);
+  rep = rep.replace(/%[sd]/g, () => "$" + (++n));
+  RULES.push([rx, rep]);
+}
+const rulesSrc = `window.DOUBAO_EN_RULES = ${JSON.stringify(RULES)};`;
+const INJECT_SRC = `${dictSrc}\n${rulesSrc}\n;\n${transSrc}`;
 const HAS_CJK = /[\u3400-\u4dbf\u4e00-\u9fff]/;
 
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), "[doubao-en]", ...a);
