@@ -34,11 +34,17 @@ const SHOT_ARG = process.argv.indexOf("--screenshot");
 const SHOT = SHOT_ARG > -1 ? (process.argv[SHOT_ARG + 1] && !process.argv[SHOT_ARG + 1].startsWith("--") ? process.argv[SHOT_ARG + 1] : "doubao-en.png") : null;
 const TARGET_URL = /^(doubao:|https?:\/\/[^/]*doubao\.com)/i;
 
-const dictSrc = fs.readFileSync(path.join(__dirname, "..", "lib", "dictionary.js"), "utf8");
 const transSrc = fs.readFileSync(path.join(__dirname, "..", "lib", "translator.js"), "utf8");
-const INJECT_SRC = `${dictSrc}\n;\n${transSrc}`;
 
-const dict = require(path.join(__dirname, "..", "lib", "dictionary.js"));
+// Merge the embedded dictionary with an optional user dictionary, so new
+// strings can be added without reinstalling the wrapper app.
+const USER_DICT_PATH = process.env.DOUBAO_EN_USER_DICT
+  || path.join(process.env.HOME || "/tmp", "Library", "Application Support", "DoubaoEN", "user-dictionary.json");
+let userDict = {};
+try { userDict = JSON.parse(fs.readFileSync(USER_DICT_PATH, "utf8")); } catch {}
+const dict = { ...require(path.join(__dirname, "..", "lib", "dictionary.js")), ...userDict };
+const dictSrc = `window.DOUBAO_EN_DICT = ${JSON.stringify(dict)};`;
+const INJECT_SRC = `${dictSrc}\n;\n${transSrc}`;
 const HAS_CJK = /[\u3400-\u4dbf\u4e00-\u9fff]/;
 
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), "[doubao-en]", ...a);

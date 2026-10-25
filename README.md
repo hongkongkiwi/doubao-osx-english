@@ -74,16 +74,34 @@ and out of reach; in-app Chinese that isn't in the dictionary stays Chinese.
 
 ## Missing translations
 
-Some label still Chinese after a Doubao update? Add it:
+Doubao's UI is not stored on your machine — the app is a native shell and
+every string arrives from ByteDance's servers at launch. That means there is
+no local file to translate once and be done: coverage is grown by collecting
+what the server actually renders. Two ways to add strings:
 
-```bash
-node bin/doubao-en.js --collect      # while Doubao EN is running
-# → writes every visible untranslated UI string to doubao-en-strings.txt
-#   (chat titles show up too — don't add those)
+**Quick, local-only (no reinstall):** create
+`~/Library/Application Support/DoubaoEN/user-dictionary.json`:
+
+```json
+{ "收藏夹": "Saved", "检查更新": "Check for updates" }
 ```
 
-Translate the lines you want, add them to `lib/dictionary.js`, then restart
-Doubao EN. Pull requests for new strings are very welcome.
+It is merged over the built-in dictionary on every launch — quit and reopen
+Doubao EN to apply.
+
+**Permanent (helps everyone):** run the collector while the screen you want
+is open, translate what you need, and send a PR:
+
+```bash
+node bin/doubao-en.js --collect
+# → writes visible untranslated strings to doubao-en-strings.txt
+#   (chat titles show up too — don't add those), then add entries to
+#   lib/dictionary.js and reinstall: ./install.sh
+```
+
+Note on scope: the dictionary matches complete UI labels exactly, so a list
+of common words does not help — and dynamic content (chat text, AI answers,
+news chips in "Recommended for you") is intentionally left untranslated.
 
 ## CLI (advanced)
 
