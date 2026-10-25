@@ -6,3 +6,4 @@ lib/dictionary-mt.json
 *.log
 .DS_Store
 node_modules/
+.aios/
