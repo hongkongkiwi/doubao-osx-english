@@ -42,7 +42,11 @@ const USER_DICT_PATH = process.env.DOUBAO_EN_USER_DICT
   || path.join(process.env.HOME || "/tmp", "Library", "Application Support", "DoubaoEN", "user-dictionary.json");
 let userDict = {};
 try { userDict = JSON.parse(fs.readFileSync(USER_DICT_PATH, "utf8")); } catch {}
-const dict = { ...require(path.join(__dirname, "..", "lib", "dictionary.js")), ...userDict };
+// machine-translated long tail (lib/dictionary-mt.json, if present) sits
+// between the curated dictionary and the user dictionary in precedence
+let mtDict = {};
+try { mtDict = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "lib", "dictionary-mt.json"), "utf8")); } catch {}
+const dict = { ...mtDict, ...require(path.join(__dirname, "..", "lib", "dictionary.js")), ...userDict };
 const dictSrc = `window.DOUBAO_EN_DICT = ${JSON.stringify(dict)};`;
 
 // Placeholder templates ("%s 分钟前", "{fileName} 上传失败") never match exact
