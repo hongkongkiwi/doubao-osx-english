@@ -1,0 +1,27 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package
+        run: ./scripts/package-release.sh
+        env:
+          VERSION: ${{ github.ref_name }}
+      - name: Publish
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.zip
+          body: |
+            Doubao EN — English UI overlay for the Doubao macOS desktop app.
+            Requires macOS 12+ and Node.js 22+. Doubao itself is never modified.
+      - name: Upload to release
+        run: echo "published"

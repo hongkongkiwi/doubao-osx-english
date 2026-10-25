@@ -1,0 +1,5 @@
+dist/
+doubao-en-strings.txt
+*.log
+.DS_Store
+node_modules/
