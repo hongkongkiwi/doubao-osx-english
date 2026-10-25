@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 VERSION="${VERSION:-$(cat VERSION 2>/dev/null || echo 1.0.0)}"
+VERSION="${VERSION#v}"
 rm -rf dist
 mkdir -p dist
 ./scripts/make-app.sh "dist/Doubao EN.app"
